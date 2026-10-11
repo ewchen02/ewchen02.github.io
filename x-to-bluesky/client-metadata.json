@@ -1,1 +1,19 @@
-
+{
+  "client_id": "https://ewchen02.github.io/x-to-bluesky/client-metadata.json",
+  "client_name": "X to Bluesky",
+  "client_uri": "https://ewchen02.github.io/x-to-bluesky/",
+  "redirect_uris": [
+    "https://ewchen02.github.io/x-to-bluesky/oauth/callback.html"
+  ],
+  "scope": "atproto",
+  "grant_types": [
+    "authorization_code",
+    "refresh_token"
+  ],
+  "response_types": [
+    "code"
+  ],
+  "token_endpoint_auth_method": "none",
+  "application_type": "web",
+  "dpop_bound_access_tokens": true
+}
