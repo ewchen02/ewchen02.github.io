@@ -1,1 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+    <title>Finishing Bluesky sign-in</title>
+    <style>
+      body {
+        background: #f6f8fb;
+        color: #172033;
+        display: grid;
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        place-items: center;
+      }
 
+      main {
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 8px 28px rgb(0 0 0 / 12%);
+        max-width: 480px;
+        padding: 28px;
+        text-align: center;
+      }
+
+      h1 {
+        font-size: 20px;
+        margin: 0 0 10px;
+      }
+
+      p {
+        line-height: 1.5;
+        margin: 0;
+      }
+
+      .error {
+        color: #b42318;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Finishing Bluesky sign-in</h1>
+      <p id="status">Returning authorization to the extension…</p>
+    </main>
+
+    <script>
+      const EXTENSION_ID = "REPLACE_WITH_YOUR_EXTENSION_ID";
+      const statusElement = document.querySelector("#status");
+
+      async function handOffOAuthCallback() {
+        const query = new URLSearchParams(window.location.search);
+
+        const payload = {
+          type: "BLUESKY_OAUTH_CALLBACK",
+          code: query.get("code"),
+          state: query.get("state"),
+          error: query.get("error"),
+          errorDescription: query.get("error_description")
+        };
+
+        if (payload.error) {
+          statusElement.textContent =
+            `Bluesky sign-in was not completed: ${payload.errorDescription || payload.error}`;
+          statusElement.classList.add("error");
+          return;
+        }
+
+        if (!payload.code || !payload.state) {
+          statusElement.textContent =
+            "The sign-in response was incomplete. Return to the extension and try again.";
+          statusElement.classList.add("error");
+          return;
+        }
+
+        if (!globalThis.chrome?.runtime?.sendMessage) {
+          statusElement.textContent =
+            "The extension was not detected. Keep it installed, then return to the extension and try again.";
+          statusElement.classList.add("error");
+          return;
+        }
+
+        try {
+          const response = await chrome.runtime.sendMessage(
+            EXTENSION_ID,
+            {
+              type: "BLUESKY_OAUTH_CALLBACK",
+              payload
+            }
+          );
+
+          if (!response?.ok) {
+            throw new Error(response?.error || "The extension rejected the callback.");
+          }
+
+          statusElement.textContent =
+            "Bluesky is connected. You can close this tab and return to the extension.";
+        } catch (error) {
+          console.error("Could not hand off OAuth callback:", error);
+          statusElement.textContent =
+            "Could not return sign-in data to the extension. Return to the extension and try again.";
+          statusElement.classList.add("error");
+        }
+      }
+
+      handOffOAuthCallback();
+    </script>
+  </body>
+</html>
